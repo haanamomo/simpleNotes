@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Windows Manual</title>
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <h2 class="blog-title">Menu</h2>
+    </div>
+    <div class="container">
+        <header>
+            <h1>Windows Manual</h1>
+        </header>
+        <div id="blogs">
+        </div>
+        <footer></footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <script>
+        fetch('https://gist.githubusercontent.com/haanamomo/8faf4c075a493855e208e2ad40e12134/raw/htmlBlogs.css')
+            .then(response => response.text())
+            .then(css => {
+                const style = document.createElement('style');
+                style.innerHTML = css;
+                document.head.appendChild(style);
+            });
+
+        fetch('https://gist.githubusercontent.com/haanamomo/188d39ac92cce778305d2e27fb1bdc94/raw/htmlFooter.html')
+            .then(response => response.text())
+            .then(html => {
+                const footer = document.getElementsByTagName('footer')[0];
+                footer.innerHTML = html;
+            });
+    </script>
+
+
+    <script>
+        const blogContainer = document.getElementById('blogs');
+
+        fetch('blogs.md')
+            .then(response => response.text())
+            .then(blogs => {
+                const blogHtml = blogs.split(/^\## /gm).map(blog => {
+                    console.log(blog)
+                    if (blog.trim()) {
+                        const content = marked.parse('## ' + blog);
+                        return `<article>${content}</article>`;
+                    }
+                }).join('');
+
+                blogContainer.innerHTML = blogHtml;
+                const articles = blogContainer.querySelectorAll('article');
+
+                // Create a menu item for each article
+                const menu = document.querySelector('.sidebar');
+                articles.forEach((article, index) => {
+                    article.id = `blog${index + 1}`;
+                    const menuItem = document.createElement('a');
+                    menuItem.href = `#${article.id}`;
+                    menuItem.textContent = article.querySelector('h2').textContent;
+                    menuItem.classList.add('blog-link');
+
+                    // Add the menu item to the menu container
+                    menu.appendChild(menuItem);
+
+                    // Set the first menu item as active by default
+                    if (index === 0) {
+                        menuItem.classList.add('active');
+                    } else {
+                        article.classList.add('hidden');
+                    }
+
+                });
+
+                const blogLinks = document.querySelectorAll('.blog-link');
+
+                blogLinks.forEach((link) => {
+                    link.addEventListener('click', (event) => {
+                        event.preventDefault();
+                        const articleId = link.getAttribute('href');
+                        const activeLink = document.querySelector('.blog-link.active');
+                        activeLink.classList.remove('active');
+                        link.classList.add('active');
+                        const activeArticle = document.querySelector('#blogs article:not(.hidden)');
+                        activeArticle.classList.add('hidden');
+                        const articleToShow = document.querySelector(articleId);
+                        articleToShow.classList.remove('hidden');
+                    });
+                });
+
+            });
+
+    </script>
+</body>
+
+</html>
